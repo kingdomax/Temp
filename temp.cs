@@ -229,12 +229,13 @@ public class BirdMover : MonoBehaviour
         /* Begin Exercise 2.4 */
         if (elasticInputX == 0f && elasticInputY == 0f) 
         { 
-            birdVelocity = Vector3.zero;
+            birdVelocity = Vector3.zero; // stop & reset bird velocity
             return;
         }
 
-        var scalingFactor = .05f;
         birdVelocity += new Vector3(elasticInputX, elasticInputY, 0f);
+
+        var scalingFactor = .02f;
         transform.Translate(birdVelocity * Time.deltaTime * scalingFactor);
         /* End Exercise 2.4 */
     }
@@ -243,7 +244,15 @@ public class BirdMover : MonoBehaviour
     void MapInputElasticAcceleration(float elasticInputX, float elasticInputY)
     {
         /* Begin Exercise 2.5 */
-        // ...
+        if (elasticInputX != 0f && elasticInputY != 0f)
+        {
+            birdAcceleration += new Vector3(elasticInputX, elasticInputY, 0);
+        }
+
+        birdVelocity = birdVelocity + birdAcceleration * Time.deltaTime;
+
+        var scalingFactor = .0001f;
+        transform.Translate(birdVelocity * scalingFactor);
         /* End Exercise 2.5 */
     }
 
@@ -285,12 +294,28 @@ Which combinations were suitable for this task
 Which combinations were less suitable? Why? 
 For the less-suitable combinations, what are use cases where the respective combinations are more appropriate?
 
-***IsotonicPosition    =>    =>
+[MOST SUITABLE COMBINATION]
+1. IsotonicPosition (~3s) : This combination allows us to control the bird movement precisely and naturally. It can easily reverse the control direction any time.
 
-IsotonicRate           =>   =>
-IsotonicAcceleration   =>   =>
-ElasticPosition        =>   =>
-ElasticRate            =>   =>
-ElasticAcceleration    =>   => 
+2. ElasticPosition  (~3s) : The reason is the same as above.
+In addition, ElasticPosition requires a bit more force from user input because the device has a centering mechanism.
+We also believe that using ElasticPosition with a virtual joystick in a small screen device(e.g. mobile phone) will be a suitable choice for the user.
+
+[LESS SUITABLE COMBINATION]
+3. ElasticRate (12s) : In order to move the bird efficiently, this combination requires the user to input velocity correctly.
+If the user inputs a small velocity, the bird will take much time until it reaches a certain sphere location.
+On the other hand, if the user inputs a large velocity, the bird will move off the target and requires reverse movement to get back into the correct position.
+Apparently, pairing elastic devices with rate-control gives a benefit that users can stop the movement easily.
+Use cases might be for controlling vehicles(e.g. train) that require constant movement speed without further input several times.
+
+4. IsotonicRate (15s) : The reason is the same as ElasticRate but this combination doesn't provide an immediate stop mechanism.
+If the bird goes off the target, it requires an effort to input the reverse movement
+which wastes the time until the bird gradually reaches back at the desired position.
+
+5. IsotonicAcceleration & ElasticAcceleration (quite impossible) : We cannot control the bird to collect all the spheres.
+The reason is the velocity of the bird keeps increasing every frame regarding previous acceleration input.
+In order to make the bird stop, it requires reverse direction from the input at exact time which is really to pull off.
+In addition, the spheres are placed around the bird but the nature of the acceleration function is not reversible at high velocity, so it is impossible to achieve this task.
+Use case might be for controlling object that need to move in only 1 direction with increasing of speed in every interval of time (e.g. rocket)
 
 /* End Exercise 2.6 */
